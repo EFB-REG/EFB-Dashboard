@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EFB Dashboard</title>
+<title>لوحة تطوع بنك الطعام المصري</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -411,7 +411,8 @@ const CONFIG = {
    ========================================================================= */
 let RAW = { volunteers: [], scans: [] };
 let CHARTS = {}; // Chart.js instances keyed by canvas id
-let costSelectedMonth = new Date().getMonth(); // 0-11, used by the "شهر محدد" dropdown
+let costSelectedMonth = new Date().getMonth(); // 0-11, used by the "تحديد شهر وسنة" dropdown
+let costSelectedYear = new Date().getFullYear();
 
 const CONTRIB_LABELS = {
   Individual: 'فردي', Company: 'شركة', School: 'مدرسة',
@@ -934,56 +935,42 @@ function renderGeo(){
 function renderCost(period){
   const container = document.getElementById('page-cost');
   const now = new Date();
+  const availableYears = Array.from(new Set(RAW.scans.filter(s=>s.checkInDate).map(s=>s.checkInDate.getFullYear()))).sort((a,b)=>b-a);
+  if (!availableYears.includes(costSelectedYear)) costSelectedYear = availableYears[0] || now.getFullYear();
+
   let scans = RAW.scans.filter(s=>s.checkInDate);
   if (period === 'year') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear());
-  if (period === 'month') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear() && s.checkInDate.getMonth()===costSelectedMonth);
+  if (period === 'month') scans = scans.filter(s=>s.checkInDate.getFullYear()===costSelectedYear && s.checkInDate.getMonth()===costSelectedMonth);
 
   const totalCost = scans.length * CONFIG.COST_PER_SLOT;
 
   const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  let rows, colLabel, secondKpiLabel, secondKpiValue, chartTitle;
 
-  if (period === 'monthly'){
-    const byMonth = {};
-    scans.forEach(s=>{
-      const key = s.checkInDate.getFullYear() + '-' + String(s.checkInDate.getMonth()+1).padStart(2,'0');
-      byMonth[key] = (byMonth[key]||0) + 1;
-    });
-    rows = Object.entries(byMonth)
-      .sort((a,b)=> a[0] < b[0] ? -1 : 1)
-      .map(([key,count])=>{
-        const [y,m] = key.split('-');
-        return { name: `${MONTH_NAMES[Number(m)-1]} ${y}`, count, cost: count*CONFIG.COST_PER_SLOT };
-      });
-    colLabel = 'الشهر';
-    secondKpiLabel = 'عدد الشهور';
-    secondKpiValue = rows.length;
-    chartTitle = 'القيمة شهريًا';
-  } else {
-    const byProgram = {};
-    scans.forEach(s=>{ byProgram[s.activity] = (byProgram[s.activity]||0)+1; });
-    rows = Object.entries(byProgram).map(([name,count])=>({name,count,cost:count*CONFIG.COST_PER_SLOT})).sort((a,b)=>b.cost-a.cost);
-    colLabel = 'البرنامج';
-    secondKpiLabel = 'عدد البرامج';
-    secondKpiValue = rows.length;
-    chartTitle = 'القيمة حسب البرنامج';
-  }
+  const byProgram = {};
+  scans.forEach(s=>{ byProgram[s.activity] = (byProgram[s.activity]||0)+1; });
+  const rows = Object.entries(byProgram).map(([name,count])=>({name,count,cost:count*CONFIG.COST_PER_SLOT})).sort((a,b)=>b.cost-a.cost);
+  const colLabel = 'البرنامج';
+  const secondKpiLabel = 'عدد البرامج';
+  const secondKpiValue = rows.length;
+  const chartTitle = 'القيمة حسب البرنامج';
 
   container.innerHTML = `
     <div class="section-title">قيمة الفرصة البديلة</div>
     <div class="section-sub">تكلفة عامل بديل لكل مشاركة: ${CONFIG.COST_PER_SLOT} ج.م</div>
 
     <div class="toggle-group" id="costToggle" style="margin-bottom:18px;">
-      <button class="toggle-btn ${period==='total'?'active':''}" data-period="total">الإجمالي كله</button>
+      <button class="toggle-btn ${period==='total'?'active':''}" data-period="total">الإجمالي</button>
       <button class="toggle-btn ${period==='year'?'active':''}" data-period="year">السنة الحالية</button>
-      <button class="toggle-btn ${period==='month'?'active':''}" data-period="month">شهر محدد</button>
-      <button class="toggle-btn ${period==='monthly'?'active':''}" data-period="monthly">توزيع شهري</button>
+      <button class="toggle-btn ${period==='month'?'active':''}" data-period="month">تحديد شهر وسنة</button>
     </div>
 
     ${period === 'month' ? `
       <div class="search-row" style="margin-bottom:18px;">
-        <select class="search-input" id="costMonthSelect" style="flex:0 0 200px;">
-          ${MONTH_NAMES.map((name,i)=>`<option value="${i}" ${i===costSelectedMonth?'selected':''}>${name} ${now.getFullYear()}</option>`).join('')}
+        <select class="search-input" id="costMonthSelect" style="flex:0 0 180px;">
+          ${MONTH_NAMES.map((name,i)=>`<option value="${i}" ${i===costSelectedMonth?'selected':''}>${name}</option>`).join('')}
+        </select>
+        <select class="search-input" id="costYearSelect" style="flex:0 0 130px;">
+          ${availableYears.map(y=>`<option value="${y}" ${y===costSelectedYear?'selected':''}>${y}</option>`).join('')}
         </select>
       </div>
     ` : ''}
@@ -1026,16 +1013,19 @@ function renderCost(period){
       renderCost('month');
     });
   }
+  const yearSelect = document.getElementById('costYearSelect');
+  if (yearSelect){
+    yearSelect.addEventListener('change', (e)=>{
+      costSelectedYear = Number(e.target.value);
+      renderCost('month');
+    });
+  }
 
   destroyChart('costChart');
-  const chartType = period === 'monthly' ? 'bar' : 'bar';
-  const chartOptions = period === 'monthly'
-    ? { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    : { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} };
   CHARTS['costChart'] = new Chart(document.getElementById('costChart'), {
-    type: chartType,
-    data:{ labels: rows.map(r=>r.name), datasets:[{ data: rows.map(r=>r.cost), backgroundColor: period==='monthly' ? '#D9A441' : '#1F5C43', borderRadius:6, maxBarThickness:26 }] },
-    options: chartOptions
+    type: 'bar',
+    data:{ labels: rows.map(r=>r.name), datasets:[{ data: rows.map(r=>r.cost), backgroundColor:'#1F5C43', borderRadius:6, maxBarThickness:26 }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
   });
 }
 
