@@ -411,6 +411,7 @@ const CONFIG = {
    ========================================================================= */
 let RAW = { volunteers: [], scans: [] };
 let CHARTS = {}; // Chart.js instances keyed by canvas id
+let costSelectedMonth = new Date().getMonth(); // 0-11, used by the "شهر محدد" dropdown
 
 const CONTRIB_LABELS = {
   Individual: 'فردي', Company: 'شركة', School: 'مدرسة',
@@ -935,7 +936,7 @@ function renderCost(period){
   const now = new Date();
   let scans = RAW.scans.filter(s=>s.checkInDate);
   if (period === 'year') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear());
-  if (period === 'month') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear() && s.checkInDate.getMonth()===now.getMonth());
+  if (period === 'month') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear() && s.checkInDate.getMonth()===costSelectedMonth);
 
   const totalCost = scans.length * CONFIG.COST_PER_SLOT;
 
@@ -975,9 +976,17 @@ function renderCost(period){
     <div class="toggle-group" id="costToggle" style="margin-bottom:18px;">
       <button class="toggle-btn ${period==='total'?'active':''}" data-period="total">الإجمالي كله</button>
       <button class="toggle-btn ${period==='year'?'active':''}" data-period="year">السنة الحالية</button>
-      <button class="toggle-btn ${period==='month'?'active':''}" data-period="month">الشهر الحالي</button>
+      <button class="toggle-btn ${period==='month'?'active':''}" data-period="month">شهر محدد</button>
       <button class="toggle-btn ${period==='monthly'?'active':''}" data-period="monthly">توزيع شهري</button>
     </div>
+
+    ${period === 'month' ? `
+      <div class="search-row" style="margin-bottom:18px;">
+        <select class="search-input" id="costMonthSelect" style="flex:0 0 200px;">
+          ${MONTH_NAMES.map((name,i)=>`<option value="${i}" ${i===costSelectedMonth?'selected':''}>${name} ${now.getFullYear()}</option>`).join('')}
+        </select>
+      </div>
+    ` : ''}
 
     <div class="kpi-grid" style="margin-bottom:20px;">
       <div class="kpi-card"><div class="kpi-label">إجمالي القيمة</div><div class="kpi-value gold num">${fmt(totalCost)} ج.م</div></div>
@@ -1009,6 +1018,14 @@ function renderCost(period){
     if (!btn) return;
     renderCost(btn.dataset.period);
   });
+
+  const monthSelect = document.getElementById('costMonthSelect');
+  if (monthSelect){
+    monthSelect.addEventListener('change', (e)=>{
+      costSelectedMonth = Number(e.target.value);
+      renderCost('month');
+    });
+  }
 
   destroyChart('costChart');
   const chartType = period === 'monthly' ? 'bar' : 'bar';
