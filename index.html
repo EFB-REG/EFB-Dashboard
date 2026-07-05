@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تطوع بنك الطعام المصري</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<style>
+  :root{
+    --bg:#FAF8F2;
+    --surface:#FFFFFF;
+    --surface-2:#F3F0E7;
+    --ink:#1E2A22;
+    --muted:#6B7268;
+    --line:#E4E0D3;
+    --primary:#1F5C43;
+    --primary-dark:#123B2B;
+    --primary-soft:#E4EEE8;
+    --accent:#D9A441;
+    --accent-soft:#F6E9C9;
+    --danger:#B8452F;
+    --danger-soft:#F5E2DC;
+    --chart-1:#1F5C43;
+    --chart-2:#D9A441;
+    --chart-3:#3E7C8C;
+    --chart-4:#B5654F;
+    --chart-5:#8FA998;
+    --chart-6:#5B6B63;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(30,42,34,.06), 0 6px 20px rgba(30,42,34,.06);
+    --sidebar-w: 252px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Cairo',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft);}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  .num{font-family:'JetBrains Mono',monospace; font-weight:700; font-variant-numeric: tabular-nums;}
+  .ltr{direction:ltr; unicode-bidi:isolate; text-align:left; display:inline-block;}
+
+  /* ---------- Layout ---------- */
+  .app{display:flex; min-height:100vh;}
+
+  .sidebar{
+    width:var(--sidebar-w);
+    flex:0 0 var(--sidebar-w);
+    background:var(--primary-dark);
+    color:#EFF5F1;
+    position:sticky;
+    top:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:22px 16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    padding:6px 8px 22px 8px;
+    border-bottom:1px solid rgba(255,255,255,.12);
+    margin-bottom:16px;
+  }
+  .brand-mark{
+    height:52px; flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .brand-mark img{width:auto; height:100%; object-fit:contain;}
+  .brand-title{font-weight:800; font-size:15px; line-height:1.35;}
+  .brand-sub{font-size:11.5px; color:#B9C9BF; font-weight:500;}
+
+  .nav{display:flex; flex-direction:column; gap:4px; flex:1;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    font-size:14px; font-weight:600;
+    color:#CFE0D5;
+    cursor:pointer;
+    border-right:3px solid transparent;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .nav-item:hover{background:rgba(255,255,255,.06); color:#fff;}
+  .nav-item.active{
+    background:rgba(217,164,65,.14);
+    color:#fff;
+    border-right-color:var(--accent);
+  }
+  .nav-item .ic{width:18px; text-align:center; flex:0 0 18px;}
+
+  .sidebar-footer{
+    font-size:11px;
+    color:#8FA398;
+    padding:12px 8px 4px 8px;
+    border-top:1px solid rgba(255,255,255,.1);
+    margin-top:12px;
+  }
+
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    background:rgba(250,248,242,.9);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:16px 28px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+  }
+  .topbar h1{font-size:19px; margin:0; font-weight:800;}
+  .topbar-meta{font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:10px;}
+  .status-dot{width:8px;height:8px;border-radius:50%; background:var(--chart-5); display:inline-block;}
+  .status-dot.live{background:var(--primary); box-shadow:0 0 0 3px var(--primary-soft);}
+  .status-dot.err{background:var(--danger); box-shadow:0 0 0 3px var(--danger-soft);}
+  .btn{
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    padding:9px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform .12s ease, border-color .12s ease;
+  }
+  .btn:hover{border-color:var(--primary);}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{background:var(--primary); color:#fff; border-color:var(--primary);}
+
+  .content{padding:24px 28px 60px 28px;}
+  .page{display:none; animation:fadein .25s ease;}
+  .page.active{display:block;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .section-title{font-size:16px; font-weight:800; margin:28px 0 12px 0; display:flex; align-items:center; gap:8px;}
+  .section-title:first-child{margin-top:0;}
+  .section-sub{font-size:13px; color:var(--muted); margin:-6px 0 16px 0;}
+
+  /* ---------- Cards / KPIs ---------- */
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px;}
+  .kpi-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; box-shadow:var(--shadow);
+  }
+  .kpi-label{font-size:12.5px; color:var(--muted); font-weight:600; margin-bottom:6px;}
+  .kpi-value{font-size:26px; font-weight:800; color:var(--primary-dark);}
+  .kpi-value.gold{color:#9C761F;}
+  .kpi-sub{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .card-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .card-head h3{font-size:14.5px; margin:0; font-weight:800;}
+
+  .grid-2{display:grid; grid-template-columns:1.1fr .9fr; gap:16px;}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media(max-width:960px){ .grid-2, .grid-3{grid-template-columns:1fr;} }
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{
+    text-align:right; padding:10px 12px; font-size:12px; color:var(--muted);
+    border-bottom:2px solid var(--line); white-space:nowrap; font-weight:700;
+    position:sticky; top:0; background:var(--surface);
+  }
+  td{padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tbody tr:hover{background:var(--surface-2);}
+  .pill{
+    display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700;
+    background:var(--primary-soft); color:var(--primary-dark);
+  }
+  .pill.gold{background:var(--accent-soft); color:#8A651A;}
+  .pill.blue{background:#E4EFF2; color:#245868;}
+  .pill.rose{background:#F3E2DC; color:#8A3F2C;}
+  .pill.sage{background:#E7EEE8; color:#48594E;}
+
+  .search-row{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .search-input{
+    flex:1; min-width:220px; padding:11px 14px; border:1px solid var(--line); border-radius:10px;
+    font-family:inherit; font-size:14px; background:var(--surface-2);
+  }
+  .search-input:focus{outline:2px solid var(--primary); outline-offset:1px; background:var(--surface);}
+  select.search-input{flex:0 0 180px;}
+
+  .empty-state{
+    text-align:center; padding:40px 20px; color:var(--muted); font-size:13.5px;
+  }
+
+  .toggle-group{display:inline-flex; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:3px; gap:2px;}
+  .toggle-btn{
+    padding:7px 16px; border-radius:8px; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; border:none; background:transparent;
+  }
+  .toggle-btn.active{background:var(--primary); color:#fff;}
+
+  .entity-list{display:flex; flex-direction:column; gap:8px; margin-top:6px;}
+  .entity-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 12px; background:var(--surface-2); border-radius:9px; font-size:13px;
+  }
+  .entity-row .name{font-weight:700;}
+  .bar-track{flex:1; height:6px; background:var(--line); border-radius:99px; margin:0 12px; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--primary); border-radius:99px;}
+
+  .profile-card{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start;}
+  .profile-qr{flex:0 0 170px; display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .profile-qr img{border-radius:10px; border:1px solid var(--line); box-shadow:var(--shadow);}
+  .profile-qr-code{font-weight:800; font-size:13px; letter-spacing:.02em;}
+  .profile-details{flex:1; min-width:240px;}
+  .profile-name{font-size:19px; font-weight:800; margin-bottom:10px;}
+  .profile-row{display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:13.5px;}
+  .profile-row:last-of-type{border-bottom:none;}
+  .profile-label{color:var(--muted); font-weight:600;}
+  .profile-subtitle{margin:16px 0 8px 0; font-weight:800; font-size:13px; color:var(--muted);}
+  .profile-programs{display:flex; flex-direction:column; gap:6px;}
+  .profile-prog-row{display:flex; align-items:center; justify-content:space-between; background:var(--surface-2); padding:8px 12px; border-radius:9px; font-size:13px;}
+
+  .chart-box{position:relative; height:280px;}
+  .chart-box.tall{height:320px;}
+
+  .config-banner{
+    background:var(--danger-soft); border:1px solid #E4B7A6; color:#7A3423;
+    padding:14px 18px; border-radius:12px; font-size:13.5px; margin-bottom:20px; line-height:1.8;
+  }
+  .config-banner code{background:#fff; padding:2px 8px; border-radius:6px; font-size:12.5px; font-family:'JetBrains Mono',monospace;}
+
+  .loading-overlay{
+    display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13.5px; padding:30px 0; justify-content:center;
+  }
+  .spinner{
+    width:16px; height:16px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--primary);
+    animation:spin .7s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .spinner{animation:none;}
+    .page{animation:none;}
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Footer ---------- */
+  .site-footer{
+    background:var(--primary-dark); color:#EFF5F1;
+    padding:44px 48px 22px 48px;
+    font-family:'Cairo',sans-serif;
+  }
+  .footer-top{
+    display:flex; flex-wrap:wrap; gap:40px; justify-content:space-between;
+    padding-bottom:26px; border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  .footer-brand{max-width:320px; flex:1 1 260px;}
+  .footer-brand-header{margin-bottom:12px;}
+  .footer-wordmark{height:80px; width:auto; object-fit:contain;}
+  .footer-desc{font-size:13px; color:#B9C9BF; line-height:1.75;}
+  .footer-col{flex:0 1 180px;}
+  .footer-col h4{font-size:14px; margin:0 0 14px 0; font-weight:800; color:#fff;}
+  .footer-col a{display:block; font-size:13px; color:#CFE0D5; text-decoration:none; margin-bottom:10px; cursor:pointer; transition:color .15s;}
+  .footer-col a:hover{color:#fff;}
+  .footer-contact-line{font-size:13px; color:#CFE0D5; margin-bottom:10px; line-height:1.6;}
+  .footer-bottom{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    padding-top:22px; font-size:12.5px; color:#B9C9BF;
+  }
+  .footer-social{display:flex; gap:10px;}
+  .footer-social a{
+    color:#CFE0D5; width:34px; height:34px; border-radius:50%;
+    background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:background .15s, color .15s; font-size:14px;
+  }
+  .footer-social a:hover{background:rgba(255,255,255,.2); color:#fff;}
+
+  @media(max-width:820px){
+    .sidebar{position:fixed; inset-inline-end:0; top:0; width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:12px 14px; z-index:20;}
+    .brand{border-bottom:none; padding-bottom:0; margin-bottom:0; border-left:1px solid rgba(255,255,255,.12); padding-left:12px;}
+    .nav{flex-direction:row; overflow-x:auto;}
+    .nav-item{white-space:nowrap; border-right:none; border-bottom:3px solid transparent;}
+    .nav-item.active{border-bottom-color:var(--accent);}
+    .sidebar-footer{display:none;}
+    .main{margin-top:78px;}
+    .app{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <img src="Logo.wh.png" alt="EFB Logo">
+      </div>
+      <div>
+        <div class="brand-title">إدارة التطوع</div>
+        <div class="brand-sub">بنك الطعام المصري</div>
+      </div>
+    </div>
+    <nav class="nav" id="navList">
+      <div class="nav-item active" data-page="overview"><span class="ic">◈</span> نظرة عامة</div>
+      <div class="nav-item" data-page="volunteers"><span class="ic">☰</span> المتطوعين</div>
+      <div class="nav-item" data-page="programs"><span class="ic">◧</span> البرامج والمشاركين</div>
+      <div class="nav-item" data-page="geo"><span class="ic">◍</span> النطاق الجغرافي</div>
+      <div class="nav-item" data-page="cost"><span class="ic">◒</span> الفرصة البديلة</div>
+      <div class="nav-item" data-page="charts"><span class="ic">▤</span> الرسوم البيانية</div>
+    </nav>
+    <div class="sidebar-footer">تحديث تلقائي من Google Sheet</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">نظرة عامة</h1>
+      <div class="topbar-meta">
+        <span><span class="status-dot" id="statusDot"></span> <span id="statusText">بيتحمل...</span></span>
+        <button class="btn" id="refreshBtn">↻ تحديث</button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="loading-overlay" id="globalLoader"><span class="spinner"></span> بنجيب بيانات المتطوعين من الشيت...</div>
+
+      <!-- ============ OVERVIEW ============ -->
+      <section class="page active" id="page-overview"></section>
+
+      <!-- ============ VOLUNTEERS ============ -->
+      <section class="page" id="page-volunteers"></section>
+
+      <!-- ============ PROGRAMS ============ -->
+      <section class="page" id="page-programs"></section>
+
+      <!-- ============ GEO ============ -->
+      <section class="page" id="page-geo"></section>
+
+      <!-- ============ COST ============ -->
+      <section class="page" id="page-cost"></section>
+
+      <!-- ============ CHARTS ============ -->
+      <section class="page" id="page-charts"></section>
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer" dir="ltr">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-brand-header">
+        <img src="en.logo.png" alt="Egyptian Food Bank" class="footer-wordmark">
+      </div>
+      <div class="footer-desc">Volunteer Dashboard 2026 is designed to help coordinators track activities, scans, and participation data in real time with clarity and reliability.</div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Dashboard</h4>
+      <a onclick="goToPage('overview')">Overview</a>
+      <a onclick="goToPage('volunteers')">Volunteers</a>
+      <a onclick="goToPage('programs')">Programs &amp; Participants</a>
+      <a onclick="goToPage('geo')">Geographic Distribution</a>
+      <a onclick="goToPage('cost')">Opportunity Cost</a>
+      <a onclick="goToPage('charts')">Charts</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/EFB-REG/EFB-Dashboard" target="_blank">Source Code</a>
+      <a href="https://www.efb.eg/ar" target="_blank">Official Website</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <div class="footer-contact-line">Email: efb.volunteer@gmail.com</div>
+      <div class="footer-contact-line">Phone: +201022335917</div>
+      <div class="footer-contact-line">Location: 44 Gamal Abd Al Naser Axis, New Cairo 3, Cairo Governorate</div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div>© 2026 EFB. Volunteer Dashboard — All rights reserved.</div>
+    <div class="footer-social">
+      <a href="https://www.facebook.com/share/g/1B2YaUgNYo/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+      <a href="https://www.instagram.com/egyfoodbank?" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="https://www.efb.eg/ar" target="_blank" aria-label="Website"><i class="fas fa-globe"></i></a>
+      <a href="https://www.linkedin.com/company/egyptian-food-bank/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+      <a href="https://x.com/EGYFOODBANK" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
+      <a href="https://www.tiktok.com/@egyfoodbank?is_from_webapp=1&sender_device=pc" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   CONFIG — غيّري الرابط ده برابط الـ Apps Script Web App بتاعك بعد النشر
+   ========================================================================= */
+const CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwZNBpuufAE6DyUA8kZnvs6Qbnu6JBqzt455SQt1Ae9_IUbzHJPSwEvIK2V0XgT5b_FGg/exec',
+  COST_PER_SLOT: 150 // تكلفة توظيف عامل مكان متطوع لكل مشاركة (جنيه)
+};
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+let RAW = { volunteers: [], scans: [] };
+let CHARTS = {}; // Chart.js instances keyed by canvas id
+
+const CONTRIB_LABELS = {
+  Individual: 'فردي', Company: 'شركة', School: 'مدرسة',
+  University: 'جامعة', YouthEntity: 'كيان شبابي', Other: 'غير محدد'
+};
+const CONTRIB_ORDER = ['Company','School','University','YouthEntity','Individual','Other'];
+const PILL_CLASS = {
+  Individual:'sage', Company:'gold', School:'blue', University:'', YouthEntity:'rose', Other:''
+};
+
+/* =========================================================================
+   GOVERNORATE NORMALIZATION + FALLBACK GUESS FROM AREA TEXT
+   ========================================================================= */
+const GOV_CANON = {
+  'القاهره':'القاهرة','القاهرة':'القاهرة',
+  'الجيزه':'الجيزة','الجيزة':'الجيزة',
+  'الاسكندرية':'الإسكندرية','الإسكندرية':'الإسكندرية','اسكندرية':'الإسكندرية','الإسكندريه':'الإسكندرية',
+  'القليوبية':'القليوبية','القليوبيه':'القليوبية',
+  'الدقهلية':'الدقهلية','الدقهليه':'الدقهلية',
+  'الغربية':'الغربية','الغربيه':'الغربية',
+  'الشرقية':'الشرقية','الشرقيه':'الشرقية',
+  'المنوفية':'المنوفية','المنوفيه':'المنوفية',
+  'كفر الشيخ':'كفر الشيخ',
+  'البحيرة':'البحيرة','البحيره':'البحيرة',
+  'الفيوم':'الفيوم',
+  'بني سويف':'بني سويف',
+  'المنيا':'المنيا',
+  'اسيوط':'أسيوط','أسيوط':'أسيوط',
+  'سوهاج':'سوهاج',
+  'قنا':'قنا',
+  'الاقصر':'الأقصر','الأقصر':'الأقصر',
+  'اسوان':'أسوان','أسوان':'أسوان',
+  'البحر الاحمر':'البحر الأحمر','البحر الأحمر':'البحر الأحمر',
+  'الوادي الجديد':'الوادي الجديد',
+  'مطروح':'مطروح',
+  'شمال سيناء':'شمال سيناء',
+  'جنوب سيناء':'جنوب سيناء',
+  'بورسعيد':'بورسعيد',
+  'الاسماعيلية':'الإسماعيلية','الإسماعيلية':'الإسماعيلية',
+  'السويس':'السويس',
+  'دمياط':'دمياط'
+};
+const GOV_AREA_KEYWORDS = {
+  'القاهرة': ['مدينة نصر','المعادي','حلوان','شبرا','الزيتون','عين شمس','المرج','الزاويه','الزاوية','التجمع','الرحاب','مصر الجديدة','وسط البلد','الدرب الاحمر','الخليفة','الساحل','بولاق','الوايلي','دار السلام','البساتين','المطرية','هليوبوليس','مدينتي','العبور','بدر','السيدة زينب','الزمالك','المقطم','النزهة','امبابة الشرقية'],
+  'الجيزة': ['فيصل','الهرم','ابو النمرس','الشيخ زايد','اكتوبر','أكتوبر','بولاق الدكرور','امبابة','العجوزة','الدقي','الوراق','اوسيم','كرداسة','الحوامدية','الشيخ زايد'],
+  'الإسكندرية': ['سموحة','ميامي','العجمي','المنتزه','سيدي جابر','محرم بك','اللبان','الابراهيمية','كرموز','باكوس','جليم','برج العرب','دوران','ستانلي'],
+  'القليوبية': ['شبين القناطر','بنها','القناطر','شبرا الخيمة','الخانكة','طوخ','قليوب'],
+  'الدقهلية': ['المنصورة','ميت غمر','طلخا','دكرنس'],
+  'الغربية': ['طنطا','المحلة','زفتى','كفر الزيات'],
+  'الشرقية': ['الزقازيق','بلبيس','العاشر من رمضان','ابو حماد','ديرب نجم'],
+  'المنوفية': ['شبين الكوم','منوف','اشمون','السادات'],
+  'كفر الشيخ': ['كفر الشيخ','دسوق','بلطيم'],
+  'البحيرة': ['دمنهور','كفر الدوار','رشيد','ابو حمص'],
+  'الفيوم': ['الفيوم'],
+  'بني سويف': ['بني سويف'],
+  'المنيا': ['المنيا','ملوي','بني مزار'],
+  'أسيوط': ['اسيوط','ديروط','منفلوط'],
+  'سوهاج': ['سوهاج','جرجا','طهطا','اخميم'],
+  'قنا': ['قنا','نجع حمادي'],
+  'الأقصر': ['الاقصر','الأقصر'],
+  'أسوان': ['اسوان','أسوان'],
+  'البحر الأحمر': ['الغردقة','رأس غارب','مرسى علم'],
+  'الوادي الجديد': ['الخارجة','الداخلة'],
+  'مطروح': ['مرسى مطروح','سيوة'],
+  'شمال سيناء': ['العريش','رفح','الشيخ زويد','بئر العبد'],
+  'جنوب سيناء': ['شرم الشيخ','دهب','نويبع','طابا','سانت كاترين'],
+  'بورسعيد': ['بورسعيد'],
+  'الإسماعيلية': ['الاسماعيلية','فايد','القنطرة'],
+  'السويس': ['السويس'],
+  'دمياط': ['دمياط','رأس البر','فارسكور']
+};
+
+function resolveGovernorate(rawGov, rawArea){
+  const g = (rawGov||'').trim();
+  if (g && GOV_CANON[g]) return GOV_CANON[g];
+  if (g) return g; // خليها زي ما هي لو مش معروفة بدل ما نضيعها
+  const area = (rawArea||'').trim();
+  if (area){
+    for (const [gov, keywords] of Object.entries(GOV_AREA_KEYWORDS)){
+      if (keywords.some(k => area.indexOf(k) !== -1)) return gov;
+    }
+  }
+  return 'غير محدد';
+}
+
+/* =========================================================================
+   JSONP LOADER
+   ========================================================================= */
+function loadDataJsonp(){
+  return new Promise((resolve, reject) => {
+    if (!CONFIG.SCRIPT_URL || CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') !== -1){
+      reject(new Error('CONFIG_MISSING'));
+      return;
+    }
+    const cbName = '__efb_cb_' + Date.now();
+    const script = document.createElement('script');
+    let done = false;
+    const cleanup = () => { delete window[cbName]; script.remove(); };
+    window[cbName] = (data) => {
+      if (done) return;
+      done = true;
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data);
+    };
+    script.onerror = () => { if (!done){ done = true; cleanup(); reject(new Error('NETWORK_ERROR')); } };
+    const url = CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + 'action=data&callback=' + cbName;
+    script.src = url;
+    document.body.appendChild(script);
+    setTimeout(() => { if (!done){ done = true; cleanup(); reject(new Error('TIMEOUT')); } }, 20000);
+  });
+}
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const fmt1 = (n) => (Math.round(n*10)/10).toLocaleString('en-US');
+function formatDuration(totalSecondsInput){
+  const totalSeconds = Math.max(0, Math.round(totalSecondsInput||0));
+  const h = Math.floor(totalSeconds/3600);
+  const m = Math.floor((totalSeconds%3600)/60);
+  const s = totalSeconds%60;
+  return `${h}h ${m}m ${s}s`;
+}
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function destroyChart(id){ if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; } }
+function orderOf_(v){ return (v.formOrder === null || v.formOrder === undefined) ? Infinity : v.formOrder; }
+
+function ageBucket(age){
+  if (age === null || age === undefined || isNaN(age)) return 'غير محدد';
+  if (age < 18) return 'أقل من 18';
+  if (age <= 24) return '18–24';
+  if (age <= 34) return '25–34';
+  if (age <= 44) return '35–44';
+  if (age <= 59) return '45–59';
+  return '60+';
+}
+const AGE_ORDER = ['أقل من 18','18–24','25–34','35–44','45–59','60+','غير محدد'];
+
+/* =========================================================================
+   NAVIGATION
+   ========================================================================= */
+const PAGE_TITLES = {
+  overview:'نظرة عامة', volunteers:'المتطوعين', programs:'البرامج والمشاركين',
+  geo:'النطاق الجغرافي', cost:'الفرصة البديلة', charts:'الرسوم البيانية'
+};
+function goToPage(page){
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[page];
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.getElementById('navList').addEventListener('click', (e) => {
+  const item = e.target.closest('.nav-item');
+  if (!item) return;
+  goToPage(item.dataset.page);
+});
+
+/* =========================================================================
+   INIT / DATA FLOW
+   ========================================================================= */
+async function init(){
+  setStatus('loading');
+  try{
+    const data = await loadDataJsonp();
+    RAW.volunteers = (data.volunteers||[]).map(v => ({
+      ...v,
+      governorateResolved: resolveGovernorate(v.governorate, v.area),
+      ageGroup: ageBucket(v.age)
+    }));
+    RAW.scans = (data.scans||[]).map(s => ({...s, checkInDate: s.checkIn ? new Date(s.checkIn) : null}));
+    RAW.generatedAt = data.generatedAt;
+    document.getElementById('globalLoader').style.display = 'none';
+    renderAll();
+    setStatus('live', data.generatedAt);
+  }catch(err){
+    document.getElementById('globalLoader').style.display = 'none';
+    if (err.message === 'CONFIG_MISSING') renderConfigMissing();
+    else renderLoadError(err.message);
+    setStatus('error');
+  }
+}
+
+function setStatus(state, generatedAt){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'status-dot' + (state === 'live' ? ' live' : state === 'error' ? ' err' : '');
+  if (state === 'loading') text.textContent = 'بيتحمل...';
+  else if (state === 'live') text.textContent = 'آخر تحديث: ' + new Date(generatedAt).toLocaleString('en-GB');
+  else text.textContent = 'في مشكلة في الاتصال';
+}
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  document.getElementById('globalLoader').style.display = 'flex';
+  init();
+});
+
+function renderConfigMissing(){
+  const html = `<div class="config-banner">
+    ⚠️ لسه مربطتش الداش بورد بالشيت. افتحي ملف <code>index.html</code> وحطي رابط
+    الـ Apps Script Web App بتاعك في <code>CONFIG.SCRIPT_URL</code> في أول السكريبت.
+    شوفي ملف <code>apps-script/Code.gs</code> وتعليمات النشر في <code>README.md</code>.
+  </div>`;
+  document.getElementById('page-overview').innerHTML = html;
+}
+function renderLoadError(msg){
+  document.getElementById('page-overview').innerHTML = `<div class="config-banner">
+    ⚠️ مقدرتش أجيب الداتا من الشيت (${escapeHtml(msg)}). اتأكدي إن الـ Web App
+    منشور بصلاحية "Anyone" وإن الرابط في CONFIG صحيح، وبعدين دوسي "تحديث".
+  </div>`;
+}
+
+function renderAll(){
+  renderOverview();
+  renderVolunteers();
+  renderPrograms();
+  renderGeo();
+  renderCost('total');
+  renderCharts();
+}
+
+/* =========================================================================
+   PAGE: نظرة عامة
+   ========================================================================= */
+function renderOverview(){
+  const vols = RAW.volunteers;
+  const scans = RAW.scans;
+  const totalSeconds = vols.reduce((s,v)=>s+(v.totalSeconds||0),0);
+  const programsCount = new Set(scans.map(s=>s.activity)).size;
+  const companiesCount = new Set(vols.filter(v=>v.contributionKey==='Company' && v.entityName).map(v=>v.entityName)).size;
+  const govCount = new Set(vols.map(v=>v.governorateResolved).filter(g=>g && g!=='غير محدد')).size;
+  const totalCost = scans.length * CONFIG.COST_PER_SLOT;
+
+  document.getElementById('page-overview').innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">إجمالي المتطوعين</div><div class="kpi-value num">${fmt(vols.length)}</div><div class="kpi-sub">مسجلين في القاعدة</div></div>
+      <div class="kpi-card"><div class="kpi-label">إجمالي ساعات التطوع</div><div class="kpi-value num ltr" style="display:block;">${formatDuration(totalSeconds)}</div><div class="kpi-sub">من ${fmt(scans.length)} مشاركة فعلية</div></div>
+      <div class="kpi-card"><div class="kpi-label">عدد البرامج</div><div class="kpi-value num">${fmt(programsCount)}</div><div class="kpi-sub">نشاط تطوعي مختلف</div></div>
+      <div class="kpi-card"><div class="kpi-label">عدد الشركات المشاركة</div><div class="kpi-value num">${fmt(companiesCount)}</div><div class="kpi-sub">جهة شركاء تطوع</div></div>
+      <div class="kpi-card"><div class="kpi-label">المحافظات المغطاة</div><div class="kpi-value num">${fmt(govCount)}</div><div class="kpi-sub">من إجمالي 27 محافظة</div></div>
+      <div class="kpi-card"><div class="kpi-label">الفرصة البديلة (إجمالي)</div><div class="kpi-value gold num">${fmt(totalCost)} ج.م</div><div class="kpi-sub">لو اتحسبت بعمالة بديلة</div></div>
+    </div>
+
+    <div class="section-title">أكتر البرامج مشاركة</div>
+    <div class="card"><div class="chart-box"><canvas id="ovChart"></canvas></div></div>
+  `;
+
+  const byProgram = {};
+  scans.forEach(s=>{ byProgram[s.activity] = (byProgram[s.activity]||0)+1; });
+  const top = Object.entries(byProgram).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  destroyChart('ovChart');
+  CHARTS['ovChart'] = new Chart(document.getElementById('ovChart'), {
+    type:'bar',
+    data:{ labels: top.map(t=>t[0]), datasets:[{ data: top.map(t=>t[1]), backgroundColor:'#1F5C43', borderRadius:6, maxBarThickness:34 }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, ticks:{precision:0}}} }
+  });
+}
+
+/* =========================================================================
+   PAGE: المتطوعين
+   ========================================================================= */
+function computeProgramHours_(v){
+  const byProg = {};
+  const targetName = (v.name||'').trim().toLowerCase();
+  RAW.scans.forEach(s=>{
+    const matchByCode = v.code && s.code && s.code === v.code;
+    const matchByName = !v.code && s.volunteerName && s.volunteerName.trim().toLowerCase() === targetName;
+    if (matchByCode || matchByName){
+      byProg[s.activity] = (byProg[s.activity]||0) + (s.durationSeconds||0);
+    }
+  });
+  return Object.entries(byProg).sort((a,b)=>b[1]-a[1]);
+}
+
+function renderProfileCard_(v){
+  const progHours = computeProgramHours_(v);
+  const qrUrl = v.code ? ('https://quickchart.io/qr?text=' + encodeURIComponent(v.code) + '&size=300&dark=000000&light=FFFFFF&margin=1') : '';
+  return `
+    <div class="card profile-card">
+      <div class="profile-qr">
+        ${v.code ? `
+          <img src="${qrUrl}" alt="QR ${escapeHtml(v.code)}" width="150" height="150">
+          <div class="profile-qr-code ltr">${escapeHtml(v.code)}</div>
+        ` : `<div class="empty-state" style="padding:10px;">مفيش كود لهذا المتطوع</div>`}
+      </div>
+      <div class="profile-details">
+        <div class="profile-name">${escapeHtml(v.name)}</div>
+        <div class="profile-row"><span class="profile-label">الكود</span><span class="ltr">${escapeHtml(v.code||'—')}</span></div>
+        <div class="profile-row"><span class="profile-label">رقم الموبايل</span><span class="ltr">${escapeHtml(v.phone||'—')}</span></div>
+        <div class="profile-row"><span class="profile-label">الإيميل</span><span class="ltr">${escapeHtml(v.email||'—')}</span></div>
+        <div class="profile-row"><span class="profile-label">إجمالي الساعات</span><span class="num ltr">${formatDuration(v.totalSeconds||0)}</span></div>
+        <div class="profile-subtitle">الساعات لكل برنامج</div>
+        <div class="profile-programs">
+          ${progHours.length ? progHours.map(([name,hrs])=>`
+            <div class="profile-prog-row"><span>${escapeHtml(name)}</span><span class="num ltr">${formatDuration(hrs)}</span></div>
+          `).join('') : `<div class="empty-state" style="padding:6px 0;">مفيش ساعات مسجلة</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderVolunteers(){
+  const container = document.getElementById('page-volunteers');
+  container.innerHTML = `
+    <div class="section-title">قائمة المتطوعين</div>
+    <div class="section-sub">دوري بالاسم أو الكود أو الإيميل أو رقم الموبايل</div>
+    <div class="search-row">
+      <input type="text" class="search-input" id="volSearch" placeholder="ابحثي عن متطوع...">
+      <select class="search-input" id="volFilter">
+        <option value="">كل أنواع المشاركة</option>
+        ${CONTRIB_ORDER.map(k=>`<option value="${k}">${CONTRIB_LABELS[k]}</option>`).join('')}
+      </select>
+    </div>
+    <div id="volProfileCard"></div>
+    <div class="card"><div class="table-wrap" id="volTableWrap"></div></div>
+  `;
+  const doRender = () => renderVolunteersTable(document.getElementById('volSearch').value, document.getElementById('volFilter').value);
+  document.getElementById('volSearch').addEventListener('input', doRender);
+  document.getElementById('volFilter').addEventListener('change', doRender);
+  doRender();
+}
+
+function renderVolunteersTable(query, contribFilter){
+  query = (query||'').trim().toLowerCase();
+  let rows = RAW.volunteers.filter(v=>{
+    if (contribFilter && v.contributionKey !== contribFilter) return false;
+    if (!query) return true;
+    return [v.name,v.code,v.email,v.phone].some(f=>String(f||'').toLowerCase().indexOf(query)!==-1);
+  });
+  rows = rows.sort((a,b)=> orderOf_(a)-orderOf_(b));
+
+  const profileSlot = document.getElementById('volProfileCard');
+  profileSlot.innerHTML = (query && rows.length === 1) ? renderProfileCard_(rows[0]) : '';
+
+  const wrap = document.getElementById('volTableWrap');
+  if (!rows.length){ wrap.innerHTML = `<div class="empty-state">مفيش نتايج مطابقة للبحث</div>`; return; }
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>الاسم</th><th>الكود</th><th>الإيميل</th><th>رقم الموبايل</th>
+        <th>نوع المشاركة</th><th>عدد المشاركات</th><th>ساعات التطوع</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(v=>`
+          <tr>
+            <td>${escapeHtml(v.name)}</td>
+            <td class="num"><span class="ltr">${escapeHtml(v.code||'—')}</span></td>
+            <td><span class="ltr">${escapeHtml(v.email||'—')}</span></td>
+            <td class="num"><span class="ltr">${escapeHtml(v.phone||'—')}</span></td>
+            <td><span class="pill ${PILL_CLASS[v.contributionKey]||''}">${CONTRIB_LABELS[v.contributionKey]||v.contributionLabel||'غير محدد'}</span></td>
+            <td class="num">${fmt(v.totalScans||0)}</td>
+            <td class="num"><span class="ltr">${formatDuration(v.totalSeconds||0)}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="section-sub" style="margin-top:12px;">إجمالي النتائج: ${fmt(rows.length)} متطوع</div>
+  `;
+}
+
+/* =========================================================================
+   PAGE: البرامج والمشاركين
+   ========================================================================= */
+function renderPrograms(){
+  const vols = RAW.volunteers;
+  const scans = RAW.scans;
+
+  const progMap = {};
+  scans.forEach(s=>{
+    if (!progMap[s.activity]) progMap[s.activity] = { sessions:0, names:new Set() };
+    progMap[s.activity].sessions += 1;
+    if (s.volunteerName) progMap[s.activity].names.add(s.volunteerName.trim().toLowerCase());
+  });
+  const progRows = Object.entries(progMap).map(([name,v])=>({
+    name, sessions:v.sessions, uniqueVolunteers:v.names.size
+  })).sort((a,b)=>b.sessions-a.sessions);
+
+  const byType = {};
+  CONTRIB_ORDER.forEach(k=>byType[k]=[]);
+  vols.forEach(v=>{ (byType[v.contributionKey]||byType.Other).push(v); });
+
+  // فهرس سريع لربط كل مشاركة (Scan) بالمتطوع بتاعها، بالكود الأول وبعدين الاسم
+  const byCodeIdx = {};
+  const byNameIdx = {};
+  vols.forEach(v=>{
+    if (v.code) byCodeIdx[v.code] = v;
+    if (v.name) byNameIdx[v.name.trim().toLowerCase()] = v;
+  });
+
+  // عدد المشاركات الفعلية (تشيك إن/آوت) لكل جهة — مش عدد المتطوعين المسجلين
+  const participationByCategory = {};
+  scans.forEach(s=>{
+    const v = (s.code && byCodeIdx[s.code]) || (s.volunteerName && byNameIdx[s.volunteerName.trim().toLowerCase()]);
+    if (!v) return;
+    const key = v.contributionKey || 'Other';
+    if (!participationByCategory[key]) participationByCategory[key] = {};
+    const ent = v.entityName || 'غير محدد';
+    participationByCategory[key][ent] = (participationByCategory[key][ent]||0) + 1;
+  });
+
+  const entityCategories = ['Company','School','University','YouthEntity'];
+  const categoryBlocks = entityCategories.map(key=>{
+    const list = byType[key]||[];
+    // أسماء الجهات المسجلة (حتى لو لسه معملهاش مشاركات) — كل اسم مرة واحدة بس
+    const distinctEntityNames = new Set();
+    list.forEach(v=>{ distinctEntityNames.add(v.entityName || 'غير محدد'); });
+    const participations = participationByCategory[key] || {};
+    const entities = Array.from(distinctEntityNames)
+      .map(ent => [ent, participations[ent] || 0])
+      .sort((a,b)=>b[1]-a[1]);
+    const maxCount = entities.length ? Math.max(1, ...entities.map(e=>e[1])) : 1;
+    const entityCount = entities.filter(e=>e[0]!=='غير محدد').length;
+    const totalParticipations = entities.reduce((s,e)=>s+e[1], 0);
+    return `
+      <div class="card">
+        <div class="card-head">
+          <h3>${CONTRIB_LABELS[key]}</h3>
+          <span class="pill ${PILL_CLASS[key]}">${fmt(list.length)} متطوع مسجل</span>
+        </div>
+        <div class="entity-list">
+          ${entities.length ? entities.map(([ent,count])=>`
+            <div class="entity-row">
+              <span class="name">${escapeHtml(ent)}</span>
+              <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCount*100).toFixed(0)}%"></div></div>
+              <span class="num">${fmt(count)}</span>
+            </div>`).join('') : `<div class="empty-state">مفيش بيانات</div>`}
+        </div>
+        <div class="section-sub" style="margin-top:12px; margin-bottom:0;">
+          شارك <strong>${fmt(entityCount)}</strong> ${CONTRIB_LABELS[key]} بإجمالي <strong>${fmt(totalParticipations)}</strong> مشاركة
+        </div>
+      </div>`;
+  }).join('');
+
+  const individualCount = (byType['Individual']||[]).length;
+  const otherCount = (byType['Other']||[]).length;
+
+  document.getElementById('page-programs').innerHTML = `
+    <div class="section-title">عدد المشاركات حسب البرنامج التطوعي</div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>البرنامج / النشاط</th><th>عدد المشاركات</th><th>عدد المتطوعين المختلفين</th></tr></thead>
+          <tbody>
+            ${progRows.map(p=>`
+              <tr><td>${escapeHtml(p.name)}</td><td class="num">${fmt(p.sessions)}</td><td class="num">${fmt(p.uniqueVolunteers)}</td></tr>
+            `).join('') || `<tr><td colspan="3"><div class="empty-state">مفيش بيانات حضور لسه</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-title">التصنيف حسب نوع الجهة</div>
+    <div class="section-sub">عدد المشاركات الفعلية (تشيك إن/آوت) لكل شركة/مدرسة/جامعة/كيان شبابي — كل جهة باسمها مرة واحدة</div>
+    <div class="grid-2">
+      ${categoryBlocks}
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>فردي</h3><span class="pill sage">${fmt(individualCount)} متطوع</span></div>
+        <div class="section-sub" style="margin:0;">إجمالي المشاركة الفردية (بدون انتماء لجهة) = <strong>${fmt(individualCount)}</strong> متطوع</div>
+      </div>
+      ${otherCount ? `<div class="card">
+        <div class="card-head"><h3>غير مصنّف</h3><span class="pill">${fmt(otherCount)} متطوع</span></div>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+/* =========================================================================
+   PAGE: النطاق الجغرافي
+   ========================================================================= */
+function renderGeo(){
+  const scanned = RAW.volunteers.filter(v=>(v.totalScans||0) > 0);
+  const resolved = scanned.filter(v=>v.governorateResolved && v.governorateResolved!=='غير محدد');
+  const excludedCount = scanned.length - resolved.length;
+  const byGov = {};
+  resolved.forEach(v=>{ const g=v.governorateResolved; byGov[g]=(byGov[g]||0)+1; });
+  const rows = Object.entries(byGov).sort((a,b)=>b[1]-a[1]);
+  const max = rows.length ? rows[0][1] : 1;
+
+  document.getElementById('page-geo').innerHTML = `
+    <div class="section-title">توزيع المتطوعين على المحافظات</div>
+    <div class="section-sub">بيتحسب بس من المتطوعين اللي عندهم حضور فعلي (Scan data)${excludedCount ? ` — ${fmt(excludedCount)} منهم بدون محافظة معروفة، مش داخلين في الأرقام دي` : ''}</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>المحافظة</th><th>عدد المتطوعين</th><th></th></tr></thead>
+            <tbody>
+              ${rows.map(([gov,count])=>`
+                <tr>
+                  <td>${escapeHtml(gov)}</td>
+                  <td class="num">${fmt(count)}</td>
+                  <td style="width:40%;"><div class="bar-track"><div class="bar-fill" style="width:${(count/max*100).toFixed(0)}%"></div></div></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card"><div class="chart-box tall"><canvas id="geoChart"></canvas></div></div>
+    </div>
+  `;
+
+  destroyChart('geoChart');
+  CHARTS['geoChart'] = new Chart(document.getElementById('geoChart'), {
+    type:'bar',
+    data:{ labels: rows.map(r=>r[0]), datasets:[{ data: rows.map(r=>r[1]), backgroundColor:'#D9A441', borderRadius:6, maxBarThickness:26 }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, ticks:{precision:0}}} }
+  });
+}
+
+/* =========================================================================
+   PAGE: الفرصة البديلة
+   ========================================================================= */
+function renderCost(period){
+  const container = document.getElementById('page-cost');
+  const now = new Date();
+  let scans = RAW.scans.filter(s=>s.checkInDate);
+  if (period === 'year') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear());
+  if (period === 'month') scans = scans.filter(s=>s.checkInDate.getFullYear()===now.getFullYear() && s.checkInDate.getMonth()===now.getMonth());
+
+  const totalCost = scans.length * CONFIG.COST_PER_SLOT;
+
+  const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  let rows, colLabel, secondKpiLabel, secondKpiValue, chartTitle;
+
+  if (period === 'monthly'){
+    const byMonth = {};
+    scans.forEach(s=>{
+      const key = s.checkInDate.getFullYear() + '-' + String(s.checkInDate.getMonth()+1).padStart(2,'0');
+      byMonth[key] = (byMonth[key]||0) + 1;
+    });
+    rows = Object.entries(byMonth)
+      .sort((a,b)=> a[0] < b[0] ? -1 : 1)
+      .map(([key,count])=>{
+        const [y,m] = key.split('-');
+        return { name: `${MONTH_NAMES[Number(m)-1]} ${y}`, count, cost: count*CONFIG.COST_PER_SLOT };
+      });
+    colLabel = 'الشهر';
+    secondKpiLabel = 'عدد الشهور';
+    secondKpiValue = rows.length;
+    chartTitle = 'القيمة شهريًا';
+  } else {
+    const byProgram = {};
+    scans.forEach(s=>{ byProgram[s.activity] = (byProgram[s.activity]||0)+1; });
+    rows = Object.entries(byProgram).map(([name,count])=>({name,count,cost:count*CONFIG.COST_PER_SLOT})).sort((a,b)=>b.cost-a.cost);
+    colLabel = 'البرنامج';
+    secondKpiLabel = 'عدد البرامج';
+    secondKpiValue = rows.length;
+    chartTitle = 'القيمة حسب البرنامج';
+  }
+
+  container.innerHTML = `
+    <div class="section-title">قيمة الفرصة البديلة</div>
+    <div class="section-sub">تكلفة عامل بديل لكل مشاركة: ${CONFIG.COST_PER_SLOT} ج.م</div>
+
+    <div class="toggle-group" id="costToggle" style="margin-bottom:18px;">
+      <button class="toggle-btn ${period==='total'?'active':''}" data-period="total">الإجمالي كله</button>
+      <button class="toggle-btn ${period==='year'?'active':''}" data-period="year">السنة الحالية</button>
+      <button class="toggle-btn ${period==='month'?'active':''}" data-period="month">الشهر الحالي</button>
+      <button class="toggle-btn ${period==='monthly'?'active':''}" data-period="monthly">توزيع شهري</button>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom:20px;">
+      <div class="kpi-card"><div class="kpi-label">إجمالي القيمة</div><div class="kpi-value gold num">${fmt(totalCost)} ج.م</div></div>
+      <div class="kpi-card"><div class="kpi-label">عدد المشاركات المحسوبة</div><div class="kpi-value num">${fmt(scans.length)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">${secondKpiLabel}</div><div class="kpi-value num">${fmt(secondKpiValue)}</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>${colLabel}</th><th>عدد المشاركات</th><th>القيمة (ج.م)</th></tr></thead>
+            <tbody>
+              ${rows.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td class="num">${fmt(r.count)}</td><td class="num">${fmt(r.cost)}</td></tr>`).join('')
+                || `<tr><td colspan="3"><div class="empty-state">مفيش مشاركات في الفترة دي</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${chartTitle}</h3></div>
+        <div class="chart-box tall"><canvas id="costChart"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('costToggle').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    renderCost(btn.dataset.period);
+  });
+
+  destroyChart('costChart');
+  const chartType = period === 'monthly' ? 'bar' : 'bar';
+  const chartOptions = period === 'monthly'
+    ? { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    : { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} };
+  CHARTS['costChart'] = new Chart(document.getElementById('costChart'), {
+    type: chartType,
+    data:{ labels: rows.map(r=>r.name), datasets:[{ data: rows.map(r=>r.cost), backgroundColor: period==='monthly' ? '#D9A441' : '#1F5C43', borderRadius:6, maxBarThickness:26 }] },
+    options: chartOptions
+  });
+}
+
+/* =========================================================================
+   PAGE: الرسوم البيانية
+   ========================================================================= */
+function renderCharts(){
+  const vols = RAW.volunteers;
+  const scans = RAW.scans;
+
+  document.getElementById('page-charts').innerHTML = `
+    <div class="section-title">عدد المشاركات لكل برنامج</div>
+    <div class="card"><div class="chart-box tall"><canvas id="chProgram"></canvas></div></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>نسب المشاركة حسب نوع الجهة</h3></div>
+        <div class="chart-box"><canvas id="chEntity"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>المشاركة حسب الفئة العمرية</h3></div>
+        <div class="chart-box"><canvas id="chAge"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  const progMap = {};
+  scans.forEach(s=>{
+    progMap[s.activity] = (progMap[s.activity]||0) + 1;
+  });
+  const progEntries = Object.entries(progMap).sort((a,b)=>b[1]-a[1]);
+
+  destroyChart('chProgram');
+  CHARTS['chProgram'] = new Chart(document.getElementById('chProgram'), {
+    type:'bar',
+    data:{ labels: progEntries.map(e=>e[0]), datasets:[{ data: progEntries.map(e=>e[1]), backgroundColor:'#1F5C43', borderRadius:6, maxBarThickness:28 }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, ticks:{precision:0}}} }
+  });
+
+  const byType = {};
+  vols.forEach(v=>{ byType[v.contributionKey] = (byType[v.contributionKey]||0)+1; });
+  const typeEntries = CONTRIB_ORDER.filter(k=>byType[k]).map(k=>[CONTRIB_LABELS[k], byType[k]]);
+  destroyChart('chEntity');
+  CHARTS['chEntity'] = new Chart(document.getElementById('chEntity'), {
+    type:'doughnut',
+    data:{ labels: typeEntries.map(e=>e[0]), datasets:[{ data: typeEntries.map(e=>e[1]),
+      backgroundColor:['#D9A441','#3E7C8C','#B5654F','#8FA998','#1F5C43','#5B6B63'] }] },
+    options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:12, font:{family:'Cairo'}}}} }
+  });
+
+  const byAge = {};
+  vols.forEach(v=>{ byAge[v.ageGroup] = (byAge[v.ageGroup]||0)+1; });
+  const ageEntries = AGE_ORDER.filter(k=>byAge[k]).map(k=>[k, byAge[k]]);
+  destroyChart('chAge');
+  CHARTS['chAge'] = new Chart(document.getElementById('chAge'), {
+    type:'bar',
+    data:{ labels: ageEntries.map(e=>e[0]), datasets:[{ data: ageEntries.map(e=>e[1]), backgroundColor:'#3E7C8C', borderRadius:6, maxBarThickness:40 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}} }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
